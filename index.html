@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Ubicación Actual</title>
+    <style>
+        /* Estilos CSS para que se vea bonito */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f2f5;
+            margin: 0;
+        }
+
+        .card {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            outline: none;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .result-container {
+            margin-top: 20px;
+            text-align: left;
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            display: none; /* Oculto por defecto */
+        }
+
+        .data-item {
+            margin: 10px 0;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .error-msg {
+            color: #dc3545;
+            margin-top: 15px;
+            font-size: 0.9rem;
+        }
+
+        .map-link {
+            display: inline-block;
+            margin-top: 15px;
+            text-decoration: none;
+            color: #007bff;
+            font-weight: bold;
+        }
+        
+        .map-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Animación de carga */
+        .loader {
+            display: none;
+            margin: 15px auto;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h1>Localizador GPS</h1>
+        <p>Pulsa el botón para ver tus coordenadas exactas.</p>
+        
+        <button id="btn-location" onclick="obtenerUbicacion()">Obtener mi ubicación</button>
+        
+        <div class="loader" id="loader"></div>
+
+        <div id="resultado" class="result-container">
+            <div class="data-item">Latitud: <span id="lat"></span></div>
+            <div class="data-item">Longitud: <span id="long"></span></div>
+            <div class="data-item">Precisión: <span id="prec"></span> metros</div>
+            <a href="#" id="map-link" class="map-link" target="_blank">Ver en Google Maps &rarr;</a>
+        </div>
+
+        <p id="error-msg" class="error-msg"></p>
+    </div>
+
+    <script>
+        // Lógica Javascript
+        const resultDiv = document.getElementById('resultado');
+        const errorMsg = document.getElementById('error-msg');
+        const loader = document.getElementById('loader');
+        const btn = document.getElementById('btn-location');
+
+        function obtenerUbicacion() {
+            // Reiniciar estado visual
+            resultDiv.style.display = 'none';
+            errorMsg.textContent = '';
+            loader.style.display = 'block';
+            btn.disabled = true;
+
+            // Verificar si el navegador soporta geolocalización
+            if (!navigator.geolocation) {
+                mostrarError("Tu navegador no soporta la geolocalización.");
+                return;
+            }
+
+            // Solicitar posición
+            navigator.geolocation.getCurrentPosition(
+                posicionExitosa, 
+                posicionError,
+                {
+                    enableHighAccuracy: true, // Intenta usar GPS si está disponible
+                    timeout: 10000,           // Esperar máximo 10 segundos
+                    maximumAge: 0             // No usar caché
+                }
+            );
+        }
+
+        function posicionExitosa(position) {
+            const latitud = position.coords.latitude;
+            const longitud = position.coords.longitude;
+            const precision = position.coords.accuracy;
+
+            // Mostrar datos en el HTML
+            document.getElementById('lat').textContent = latitud;
+            document.getElementById('long').textContent = longitud;
+            document.getElementById('prec').textContent = Math.round(precision);
+
+            // Crear enlace a Google Maps
+            const mapLink = document.getElementById('map-link');
+            mapLink.href = `https://www.google.com/maps?q=${latitud},${longitud}`;
+
+            // Actualizar interfaz
+            loader.style.display = 'none';
+            resultDiv.style.display = 'block';
+            btn.disabled = false;
+        }
+
+        function posicionError(error) {
+            let mensaje = "";
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    mensaje = "🚫 Has denegado el permiso de ubicación.";
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    mensaje = "📡 La información de ubicación no está disponible.";
+                    break;
+                case error.TIMEOUT:
+                    mensaje = "⏳ Se agotó el tiempo de espera.";
+                    break;
+                default:
+                    mensaje = "❌ Ocurrió un error desconocido.";
+            }
+            mostrarError(mensaje);
+        }
+
+        function mostrarError(texto) {
+            loader.style.display = 'none';
+            btn.disabled = false;
+            errorMsg.textContent = texto;
+        }
+    </script>
+</body>
+</html>
