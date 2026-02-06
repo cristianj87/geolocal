@@ -149,8 +149,8 @@
                 posicionExitosa, 
                 posicionError,
                 {
-                    enableHighAccuracy: true, // Intenta usar GPS si está disponible
-                    timeout: 10000,           // Esperar máximo 10 segundos
+                    enableHighAccuracy: false, // Intenta usar GPS si está disponible
+                    timeout: 30000,           // Esperar máximo 10 segundos
                     maximumAge: 0             // No usar caché
                 }
             );
@@ -201,4 +201,5 @@
         }
     </script>
 </body>
+
 </html>
